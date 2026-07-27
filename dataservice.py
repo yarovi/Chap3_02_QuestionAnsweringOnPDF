@@ -85,7 +85,7 @@ class DataService:
                            for i in range(0, len(text_page), chunk_length)])
 
         # Create embeddings
-        response = client.embeddings.create(model='nomic-embed-text:latest', input=chunks)
+        response = client.embeddings.create(model='nomic-embed-text', input=chunks)
         return [{'id': value.index, 'vector': value.embedding, 'text': chunks[value.index]} for value in response.data]
 
     def search_redis(self,
@@ -99,9 +99,10 @@ class DataService:
                      ):
         # Creates embedding vector from user query
         embedded_query = client.embeddings.create(input=user_query,
-                                                  model="nomic-embed-text:latest").data[0].embedding
+                                                  model="nomic-embed-text").data[0].embedding
         # Prepare the Query
         base_query = f'{hybrid_fields}=>[KNN {k} @{vector_field} $vector AS vector_score]'
+        print("Embedding query:", base_query)
         query = (
             Query(base_query)
             .return_fields(*return_fields)

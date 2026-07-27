@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    MODEL = os.getenv("OPENAI_MODEL")
+    MODEL_CHAT = os.getenv("OPENAI_MODEL_CHAT")
     BASE_URL = os.getenv("OPENAI_BASE_URL")
     API_KEY = os.getenv("OPENAI_API_KEY")
     INDEX_NAME=os.getenv("INDEX_NAME")
