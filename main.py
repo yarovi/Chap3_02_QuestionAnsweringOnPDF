@@ -1,16 +1,29 @@
-# This is a sample Python script.
+# Example pdf
+from dataservice import DataService
+from intentservice import IntentService
+from responseservice import ResponseService
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+pdf = 'files/ExplorersGuide.pdf'
 
+data_service = DataService()
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+# Drop all data from redis if needed
+data_service.drop_redis_data()
 
+# Load data from pdf to redis
+data = data_service.pdf_to_embeddings(pdf)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+data_service.load_data_to_redis(data)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+intent_service = IntentService()
+response_service = ResponseService()
+
+# Question
+question = 'Where to find treasure chests?'
+# Get the intent
+intents = intent_service.get_intent(question)
+# Get the facts
+facts = data_service.search_redis(intents)
+# Get the answer
+answer = response_service.generate_response(facts, question)
+print(answer)

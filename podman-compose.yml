@@ -1,22 +1,30 @@
-version: '3.7'
+version: "3.9"
+
 services:
 
-  vector-db:
-    image: redis/redis-stack:latest
+  redis:
+    image: redis:8
+    container_name: redis
+
     ports:
-      - 6379:6379
-      - 8001:8001
-    environment:
-      - REDISEARCH_ARGS=CONCURRENT_WRITE_MODE
-      - REDIS_DATA_DIR=/data
+      - "6379:6379"
+
     volumes:
-      - vector-db:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
-      interval: 2s
-      timeout: 1m30s
-      retries: 5
-      start_period: 5s
+      - redis-data:/data
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+
+    ports:
+      - "5540:5540"
+
+    volumes:
+      - redisinsight-data:/data
+
+    depends_on:
+      - redis
 
 volumes:
-  vector-db:
+  redis-data:
+  redisinsight-data:
