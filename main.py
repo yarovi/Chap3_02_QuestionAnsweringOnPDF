@@ -27,3 +27,5 @@ facts = data_service.search_redis(intents)
 # Get the answer
 answer = response_service.generate_response(facts, question)
 print(answer)
+
+print("Finished")

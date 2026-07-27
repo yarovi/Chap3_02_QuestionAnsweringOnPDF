@@ -14,3 +14,6 @@ pip install openai
 
 # ENV
 pip install python-dotenv
+
+## For Connected RedisInsight
+redis (not localhost)

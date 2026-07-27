@@ -14,7 +14,11 @@ client = OpenAI()
 
 class DataService:
     def __init__(self):
-        self.redis_client = redis.Redis(host=Settings.REDIS_HOST, port=Settings.REDIS_PORT, db=0,password=Settings.REDIS_PASSWORD)
+        self.redis_client = redis.Redis(
+            host=Settings.REDIS_HOST,
+            port=Settings.REDIS_PORT,
+            password=Settings.REDIS_PASSWORD,
+            decode_responses=False)
     def drop_redis_data(self,index_name: str =Settings.INDEX_NAME):
         try:
             self.redis_client.ft(index_name).dropindex()
@@ -25,6 +29,7 @@ class DataService:
 
     def load_data_to_redis(self,embeddings):
         # Constants
+
         vector_dim = len(embeddings[0]['vector'])
         # Initial number of vectors
         vector_number = len(embeddings)
@@ -34,7 +39,7 @@ class DataService:
         text_embedding =VectorField("vector","FLAT",{
             "TYPE":"FLOAT32",
             "DIM":vector_dim,
-            "DISTANCE_METRIC": "COSINE",
+            "DISTANCE_METRIC": Settings.DISTANCE_METRIC,
             "INITIAL_CAP": vector_number
         })
         fields = [text,text_embedding]
@@ -43,7 +48,8 @@ class DataService:
         try:
             self.redis_client.ft(Settings.INDEX_NAME).info()
             print(f'Loaded {embeddings} embeddings')
-        except:
+        except Exception as ex:
+            print("No exist :",ex)
             # Create RedisSearch Index
             self.redis_client.ft(Settings.INDEX_NAME).create_index(
                 fields=fields,
@@ -51,13 +57,23 @@ class DataService:
                     prefix=[Settings.PREFIX],index_type=IndexType.HASH
                 )
             )
+            print("Created index")
         for embedding in embeddings:
             key = f"{Settings.PREFIX}:{str(embedding['id'])}"
-            embedding["vetor"] =np.array(
+            embedding["vector"] =np.array(
                 embedding["vector"],dtype=np.float32).tobytes()
-            self.redis_client.hset(key,embedding)
+            print(type(embedding))
+            print(embedding.keys())
+            print("id:", embedding["id"], type(embedding["id"]))
+            print("text:", type(embedding["text"]))
+            print("vector:", type(embedding["vector"]))
+            print("vector bytes:", len(embedding["vector"]))
+            self.redis_client.hset(key,mapping=embedding)
+        info = self.redis_client.info()
+
+        keys = info.get("db0", {}).get("keys", 0)
         print(
-            f"Loaded {self.redis_client.info()['db0']['keys']} documents in Redis search index with name: {Settings.INDEX_NAME}")
+            f"Loaded {keys} documents into {Settings.INDEX_NAME}")
 
     def pdf_to_embeddings(self, pdf_path: str, chunk_length: int = 1000):
         # Read data from pdf file and split it into chunks
